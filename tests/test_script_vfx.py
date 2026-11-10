@@ -35,6 +35,8 @@ def test_auto_approve_all_publishes_unreviewed_script_without_review_flag(cfg):
     cfg["publishing"]["mode"] = "auto"; cfg["publishing"]["auto_approve_all"] = True
     p = Pipeline(cfg, DB(":memory:")); i = p.make_next(); it = p.db.get_item(i)
     assert it["status"] == "approved" and not it["review_reason"]
+    # the publish gate requires these exact grades, so auto-approval must set them like a human /approve does
+    assert it["religious_verification"] == "VERIFIED" and it["content_quality"] == "APPROVED"
 
 def test_script_can_be_disabled(cfg):
     cfg["audio"]["recitation"]["enabled"] = False; cfg["script"]["enabled"] = False

@@ -12,6 +12,7 @@ def cfg(tmp_path):
     c["paths"] = {"db": str(tmp_path / "t.sqlite3"), "output": str(tmp_path / "out"), "cache": str(tmp_path / "cache")}
     c["video"]["vfx"]["enabled"] = False         # fast tests; VFX has its own test
     c["script"]["require_review"] = False        # review gating has its own test
+    c["publishing"]["auto_approve_all"] = False  # review gating has its own test (config default is true)
     return c
 
 @pytest.fixture

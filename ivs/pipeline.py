@@ -229,11 +229,16 @@ class Pipeline:
 
     def _auto_approve(self, item_id: int) -> None:
         """Approval policy: mode=approval -> stays 'rendered' until a human approves; auto/draft -> approved.
-        publishing.auto_approve_all (IVS_AUTO_APPROVE_ALL=1 in CI) approves any rendered item regardless of its grades."""
+        publishing.auto_approve_all (IVS_AUTO_APPROVE_ALL=1 in CI) approves any rendered item regardless of its grades,
+        with the same effects as a human `/approve`: grades become VERIFIED/APPROVED and pending claims are human_approved,
+        which the publish gate requires. REJECTED verification never reaches here (gated in render_item)."""
         mode = self.cfg["publishing"]["mode"]
         it = self.db.get_item(item_id)
-        if mode == "auto" and (self.cfg["publishing"].get("auto_approve_all") or
-                               (it["religious_verification"] == "VERIFIED" and it["content_quality"] == "APPROVED")):
+        if mode != "auto":
+            return
+        if self.cfg["publishing"].get("auto_approve_all"):
+            self.approve(item_id)
+        elif it["religious_verification"] == "VERIFIED" and it["content_quality"] == "APPROVED":
             self.db.set_status(item_id, "approved")
 
     # ---- review actions -------------------------------------------
