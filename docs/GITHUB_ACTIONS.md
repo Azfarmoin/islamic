@@ -12,6 +12,7 @@ Three workflows in `.github/workflows/`:
 1. Push the project to a GitHub repo. Public = unlimited minutes; private = 2000 free min/month (a daily video takes ~10 min).
 2. Run `python -m ivs auth-youtube` **on your own PC once** (see `docs/YOUTUBE_SETUP.md`). Put the three values in *Settings > Secrets and variables > Actions > Secrets*: `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, `YOUTUBE_REFRESH_TOKEN`. Without them, videos are still made and reviewed but nothing is uploaded.
 3. Optional variable `IVS_YT_PRIVACY` (`private` default, `unlisted`, `public`). Start private.
+3a. Optional variable `IVS_AUTO_APPROVE_ALL` = `1`: uploads every rendered item (stories, hadith, unreviewed AI script lines) without a review issue. Content whose source verification was REJECTED still never auto-publishes. Use only after you accept that nobody sees those videos before they reach your channel.
 4. *Settings > Actions > General > Workflow permissions*: read and write, and tick "Allow GitHub Actions to create pull requests".
 5. Run `daily-video` manually once from the Actions tab.
 

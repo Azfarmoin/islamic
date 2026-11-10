@@ -171,6 +171,13 @@ class Pipeline:
                           description=meta["description"], tags=json.dumps(meta["tags"]))
             if not qc["passed"]:
                 self.db.set_status(item_id, "failed", error="QC failed: " + ", ".join(qc["failed"]), **fields)
+            elif rel == "REJECTED":
+                # source verification itself failed (checksum/range/cross-check): never auto-published, even with auto_approve_all
+                self.db.set_status(item_id, "needs_review", review_reason=(content.review_reason or "religious verification failed"), **fields)
+            elif self.cfg.get("publishing", {}).get("auto_approve_all"):
+                # owner opted out of the human-review gate (IVS_AUTO_APPROVE_ALL=1): publish everything that rendered
+                self.db.set_status(item_id, "rendered", **fields)
+                self._auto_approve(item_id)
             elif rel != "VERIFIED" or qual != "APPROVED":
                 reasons = [x for x in (content.review_reason if content.needs_review else "",
                                        "Editorial script lines (context/takeaway) have not been reviewed by a qualified person."
@@ -221,10 +228,12 @@ class Pipeline:
         return bool(content.script and self.cfg.get("script", {}).get("require_review", True) and not content.script.get("reviewed"))
 
     def _auto_approve(self, item_id: int) -> None:
-        """Approval policy: mode=approval -> stays 'rendered' until a human approves; auto/draft -> approved."""
+        """Approval policy: mode=approval -> stays 'rendered' until a human approves; auto/draft -> approved.
+        publishing.auto_approve_all (IVS_AUTO_APPROVE_ALL=1 in CI) approves any rendered item regardless of its grades."""
         mode = self.cfg["publishing"]["mode"]
         it = self.db.get_item(item_id)
-        if mode == "auto" and it["religious_verification"] == "VERIFIED" and it["content_quality"] == "APPROVED":
+        if mode == "auto" and (self.cfg["publishing"].get("auto_approve_all") or
+                               (it["religious_verification"] == "VERIFIED" and it["content_quality"] == "APPROVED")):
             self.db.set_status(item_id, "approved")
 
     # ---- review actions -------------------------------------------

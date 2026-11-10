@@ -29,6 +29,13 @@ def test_unreviewed_script_holds_item_for_review_by_default(cfg):
     p = Pipeline(cfg, DB(":memory:")); i = p.make_next(); it = p.db.get_item(i)
     assert it["status"] == "needs_review" and "Editorial script" in it["review_reason"]
 
+def test_auto_approve_all_publishes_unreviewed_script_without_review_flag(cfg):
+    """IVS_AUTO_APPROVE_ALL / publishing.auto_approve_all: the owner opted out of the human gate."""
+    cfg["audio"]["recitation"]["enabled"] = False; cfg["script"]["require_review"] = True
+    cfg["publishing"]["mode"] = "auto"; cfg["publishing"]["auto_approve_all"] = True
+    p = Pipeline(cfg, DB(":memory:")); i = p.make_next(); it = p.db.get_item(i)
+    assert it["status"] == "approved" and not it["review_reason"]
+
 def test_script_can_be_disabled(cfg):
     cfg["audio"]["recitation"]["enabled"] = False; cfg["script"]["enabled"] = False
     p = Pipeline(cfg, DB(":memory:")); i = p.make_next(); d = Path(p.db.get_item(i)["video_path"]).parent

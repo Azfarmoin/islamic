@@ -19,6 +19,7 @@ jobs:
       IVS_VIDEOS_PER_DAY: ${{ vars.IVS_VIDEOS_PER_DAY || '5' }}
       IVS_YT_QUOTA: ${{ vars.IVS_YT_QUOTA || '10000' }}
       IVS_YT_PRIVACY: ${{ inputs.privacy || vars.IVS_YT_PRIVACY || 'private' }}
+      IVS_AUTO_APPROVE_ALL: ${{ vars.IVS_AUTO_APPROVE_ALL || '' }}   # '1' = upload every rendered item without the review issue (REJECTED content still never auto-publishes)
       YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
       YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
       YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}

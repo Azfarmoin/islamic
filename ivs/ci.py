@@ -25,11 +25,14 @@ def slots_for(env) -> dict:
 
 def apply_overrides(cfg: dict, env=None) -> dict:
     """CI defaults: 2.5D only (3D is too slow for runners), auto-publish ONLY content that is fully verified with no review flags
-    (Quran ayah), everything else waits for `/approve`. YouTube is enabled only when all three secrets exist; privacy defaults to private."""
+    (Quran ayah), everything else waits for `/approve`. YouTube is enabled only when all three secrets exist; privacy defaults to private.
+    IVS_AUTO_APPROVE_ALL=1 opts out of the human-review gate: every rendered item (stories, hadith, unreviewed AI script lines)
+    is then approved and uploaded automatically. Verification-REJECTED content still never auto-publishes."""
     env = os.environ if env is None else env
     cfg.setdefault("three_d", {})["enabled"] = False
     cfg.setdefault("schedule", {}).update(slots_for(env))
     pub = cfg.setdefault("publishing", {}); pub["mode"] = env.get("IVS_MODE", "auto") if env.get("IVS_MODE") in ("auto", "approval", "draft") else "auto"
+    pub["auto_approve_all"] = env.get("IVS_AUTO_APPROVE_ALL", "").strip().lower() in ("1", "true", "yes") if "IVS_AUTO_APPROVE_ALL" in env else bool(pub.get("auto_approve_all"))
     yt = pub.setdefault("platforms", {}).setdefault("youtube", {})
     have = all(env.get(k) for k in ("YOUTUBE_CLIENT_ID", "YOUTUBE_CLIENT_SECRET", "YOUTUBE_REFRESH_TOKEN"))
     yt["enabled"] = bool(have)

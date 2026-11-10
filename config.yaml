@@ -10,7 +10,8 @@ schedule:
   times: ["18:00"]              # local time in `timezone`
   categories: [quran_ayah, hadith, story]   # rotation pool (story = human-authored files in content/stories)
 publishing:
-  mode: approval                # approval | auto | draft
+  mode: auto                   # approval | auto | draft
+  auto_approve_all: true       # true = approve every rendered item without human review (CI can override with repo variable IVS_AUTO_APPROVE_ALL). Content whose source verification REJECTED still never auto-publishes.
   platforms:
     youtube: {enabled: false, privacy: private, category_id: "27"}   # 27 = Education
 video:
