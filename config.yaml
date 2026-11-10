@@ -1,0 +1,82 @@
+# Islamic Video Engine - sample configuration (all values have safe defaults)
+zero_cost_mode: true            # never changes; any paid-provider setting is refused at startup
+timezone: Asia/Karachi
+paths:
+  db: data/ivs.sqlite3
+  output: output
+  cache: data/cache
+schedule:
+  videos_per_day: 1
+  times: ["18:00"]              # local time in `timezone`
+  categories: [quran_ayah, hadith, story]   # rotation pool (story = human-authored files in content/stories)
+publishing:
+  mode: approval                # approval | auto | draft
+  platforms:
+    youtube: {enabled: false, privacy: private, category_id: "27"}   # 27 = Education
+video:
+  width: 1080
+  height: 1920
+  fps: 24
+  target_seconds: [50, 75]
+  length_seconds: 60            # aim for ~1 min: short verses replay the recitation once + a quiet reflection hold; nothing invented
+  subtitle_mode: ar_ur_en_alternating   # ar_ur | ar_en | ar_ur_en_alternating | ar_ur_en_stacked
+  story_subtitle_mode: ar_ur_en_stacked   # stories: Arabic + Urdu + English on one screen when legible
+  watermark: ""                 # e.g. "@yourchannel"
+  scenery: {enabled: true}      # every video (ayat, hadith, stories) gets a faceless animated landscape chosen from the verified text's meaning
+  vfx:                          # all generated locally, no stock footage
+    enabled: true
+    kenburns: true              # slow zoom/drift on the background
+    particles: true             # drifting gold dust (screen blended)
+    text_reveal: true           # fade + ease-up of text
+script:
+  enabled: true                 # context line before the verse, takeaway after
+  require_review: true          # editorial lines are NOT scholar-reviewed; items wait in needs_review until approved
+audio:
+  recitation:
+    enabled: true
+    provider: everyayah         # downloaded on YOUR machine; see docs/LICENSES.md
+    permission_verified: true   # MUST be set true by you after checking the recording's reuse/monetization terms; until then videos are text-only
+    permission_note: "Owner confirmed 2026-11-08: non-monetized channel, recitation (EveryAyah, Alafasy) used with on-screen reciter credit. Terms not independently checked by the assistant."        # e.g. "EveryAyah terms checked 2026-11-01: <what you verified>"
+    reciter_display: "Mishary Alafasy"   # shown on screen; check that it matches the chosen reciter folder
+    style: ""                   # "Murattal" / "Mujawwad" only if you have verified it for this recording; blank = not shown
+    reciter: Alafasy_128kbps
+    base_url: https://everyayah.com/data
+    mirrors: [everyayah, islamic_network]   # tried in order; both are the SAME reciter (Alafasy). Never synthetic audio.
+    islamic_edition: ar.alafasy            # cdn.islamic.network edition for the same reciter; terms: alquran.cloud/terms-and-conditions
+    islamic_bitrate: 128
+  narration:                    # stories only; never used for Quran text. 100% free + local
+    enabled: true
+    story_languages: [en]           # spoken narration is English only (Kokoro). Urdu stays as on-screen text/subtitles. Add ur for eSpeak Urdu speech
+    engines: [chatterbox, qwen3, fish]   # optional neural voices, tried in order; each activates ONLY if installed (fish: set FISH_SPEECH_URL). Falls back to Kokoro/eSpeak. Never for Quran.
+    allow_edge: true            # OPT-IN: human-like Microsoft neural voices via edge-tts (online, unofficial, free). pip install edge-tts. Never used for Quran.
+    edge_voices: {en: en-GB-RyanNeural, ur: ur-PK-AsadNeural}
+    edge_rate: "-5%"
+  sfx:
+    openverse:                  # real recorded effects (CC0 / CC BY / PDM only), pinned per role, synthetic fallback
+      enabled: auto             # false = always synthetic
+      max_mb: 15
+      verify_with_earshot: false  # optional: needs `pip install git+https://github.com/Leonxlnx/earshot` (torch + CLAP models, slow)
+  background_music: false       # never during recitation
+dedupe:
+  recent_topic_window: 6        # a surah / hadith collection / story used in the last N videos is skipped (variety; parts of a long story get spaced out)
+  similarity_threshold: 0.82    # char-ngram cosine on normalized text
+quran:
+  arabic_edition: ara-quranuthmanihaf
+  crosscheck_edition: ara-quransimple
+  urdu_edition: urd-fatehmuhammadja
+  english_edition: eng-abdullahyusufal
+
+js_fx:                          # PixiJS overlay, HyperFrames frame, GL Transitions, p5.js geometric backgrounds (needs Node>=22 + `npm ci` in js/)
+  enabled: auto                 # auto = use if available, false = off
+  transitions: true
+  transition_seconds: 0.6
+  pixi: true
+  frame: true                   # HyperFrames animated geometric border (Quran/hadith videos)
+  p5: true
+three_d:              # Blender 3D shots (slow, CPU). Only used when pre-rendered: `python -m ivs film <story>`
+  enabled: true
+  tier: auto            # auto = by hardware (LOW/MEDIUM/HIGH) | draft 360x640@8fps | hd 540x960@12 | full 1080x1920@24
+  max_seconds: auto     # 3D budget per video; the rest of the film uses the 2.5D engine
+  engine: CYCLES
+hardware:
+  auto: true            # python -m ivs hardware

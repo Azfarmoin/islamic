@@ -1,0 +1,54 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<meta name="viewport" content="width=1080,height=1920">
+<script src="gsap.min.js"></script>
+<style>
+@font-face{font-family:Amiri;src:url(fonts/Amiri-Regular.ttf)}
+@font-face{font-family:NotoSans;src:url(fonts/NotoSans.ttf)}
+@font-face{font-family:Nastaliq;src:url(fonts/NotoNastaliqUrdu.ttf)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#0b1a2b}
+#bg{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 38%,#16304a 0%,#0b1a2b 62%,#050c15 100%)}
+#stars{position:absolute;inset:0;width:1080px;height:1920px}
+.stage{position:absolute;left:90px;right:90px;top:260px;bottom:300px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:46px;text-align:center}
+.line{text-align:center;position:absolute;left:90px;right:90px;top:260px;bottom:300px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:44px;opacity:0}
+.ar{font-family:Amiri;font-size:112px;line-height:1.75;color:#f3e3b3;direction:rtl}
+.en{font-family:NotoSans;font-size:54px;line-height:1.35;color:#e8eef5}
+.ur{font-family:Nastaliq;font-size:60px;line-height:2.1;color:#cfe0ea;direction:rtl}
+.ref{font-family:NotoSans;font-size:34px;letter-spacing:6px;text-transform:uppercase;color:#d9b46a}
+.rule{width:220px;height:3px;background:#d9b46a;transform-origin:center}
+#bar{position:absolute;left:90px;bottom:150px;height:6px;width:900px;background:rgba(255,255,255,.12)}
+#fill{height:100%;width:0;background:#d9b46a}
+.w{display:inline-block;white-space:pre}
+</style></head><body>
+<div id="bg"></div><svg id="stars" viewBox="0 0 1080 1920"></svg>
+<div id="lines"></div><div id="bar"><div id="fill"></div></div>
+<script>
+// Data is injected by the renderer as window.KIN = {lines:[{ref,ar,en,ur,dur}], seed}. Text is shown exactly as supplied (verified upstream); only the animation is generated here.
+const D = window.KIN || {lines:[{ref:"demo",ar:"",en:"No data",ur:"",dur:3}], seed:1};
+const NS="http://www.w3.org/2000/svg", S=document.getElementById("stars"); let sd=D.seed||1; const rnd=()=>{sd=(sd*1664525+1013904223)>>>0;return sd/4294967296};
+const star=(x,y,R,r,p)=>{let a=[];for(let k=0;k<p*2;k++){const t=k*Math.PI/p,q=k%2?r:R;a.push((x+Math.cos(t)*q).toFixed(1)+","+(y+Math.sin(t)*q).toFixed(1))}return a.join(" ")};
+const stars=[];for(let i=0;i<26;i++){const g=document.createElementNS(NS,"polygon");const x=rnd()*1080,y=rnd()*1920,R=10+rnd()*34;g.setAttribute("points",star(0,0,R,R*.45,8));g.setAttribute("transform",`translate(${x} ${y})`);g.setAttribute("fill","none");g.setAttribute("stroke","#d9b46a");g.setAttribute("stroke-opacity",(0.15+rnd()*.3).toFixed(2));g.setAttribute("stroke-width","2");S.appendChild(g);stars.push([g,x,y,rnd()])}
+const tl=gsap.timeline({paused:true}); let T=0.4; const host=document.getElementById("lines");
+D.lines.forEach((L,i)=>{
+  const el=document.createElement("div");el.className="line";
+  const parts=[["ref",L.ref],["ar",L.ar],["rule",""],["en",L.en],["ur",L.ur]].filter(p=>p[0]==="rule"||p[1]);
+  parts.forEach(([k,v])=>{const d=document.createElement("div");d.className=k;
+    if(k==="en"){v.split(" ").forEach(w=>{const s=document.createElement("span");s.className="w";s.textContent=w+" ";d.appendChild(s)})}else d.textContent=v;el.appendChild(d)});
+  host.appendChild(el);const dur=L.dur||4, inT=0.7, outT=0.5;
+  tl.set(el,{opacity:1},T);
+  const ar=el.querySelector(".ar"), ref=el.querySelector(".ref"), rule=el.querySelector(".rule"), en=el.querySelectorAll(".en .w"), ur=el.querySelector(".ur");
+  if(ref)tl.from(ref,{opacity:0,y:-20,duration:inT*.6,ease:"power2.out"},T);
+  if(ar)tl.from(ar,{opacity:0,scale:.9,y:30,filter:"blur(14px)",duration:inT*1.4,ease:"power3.out"},T+.1);        // whole line: Arabic joins are never split
+  if(rule)tl.from(rule,{scaleX:0,duration:inT,ease:"power2.inOut"},T+.5);
+  if(en.length)tl.from(en,{opacity:0,y:26,duration:.5,ease:"power2.out",stagger:Math.min(.12,(dur*.45)/en.length)},T+.7);
+  if(ur)tl.from(ur,{opacity:0,y:24,duration:.8,ease:"power2.out"},T+1.0);
+  tl.to(el,{opacity:0,y:-24,duration:outT,ease:"power1.in"},T+dur-outT); T+=dur;
+});
+const DURATION=T+0.4;
+tl.to("#fill",{width:"100%",duration:DURATION,ease:"none"},0);
+const spin={t:0};tl.to(spin,{t:1,duration:DURATION,ease:"none",onUpdate(){stars.forEach(([g,x,y,k],i)=>g.setAttribute("transform",`translate(${x} ${y+spin.t*(i%2?-60:60)}) rotate(${spin.t*(i%3?90:-90)})`))}},0);
+const seek=t=>{tl.pause();tl.time(t,false)};
+window.OPENER={tl,DURATION,seek,ready:false};
+document.fonts.ready.then(()=>{window.OPENER.ready=true});
+</script></body></html>
